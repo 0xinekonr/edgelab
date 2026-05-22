@@ -1,0 +1,21 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Maven / Java build
+target/
+
+# VS Code
+.vscode/
+
+# Visual Studio / C++ build
+.vs/
+out/
+build/
+cmake-build-*/
+
+# OS
+.DS_Store
+Thumbs.db
