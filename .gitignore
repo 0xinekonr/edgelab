@@ -10,11 +10,19 @@ target/
 # VS Code
 .vscode/
 
-# Visual Studio / C++ build
+# Visual Studio / C++ generated files
 .vs/
 out/
 build/
 cmake-build-*/
+
+# C++ compiler artifacts
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.lib
+*.dll
 
 # OS
 .DS_Store

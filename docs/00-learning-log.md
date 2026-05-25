@@ -209,3 +209,144 @@ MockMvc 会通过 Spring MVC 和 Jackson 按照 JSON 规范解析请求体。非
 - 请求和响应使用独立 DTO 或 record 表达。
 - 注释只写必要内容，重点解释业务含义、关键配置、重要框架机制或不明显的实现原因。
 - 每一步变更尽量小而清晰，便于测试、提交和回滚。
+
+### 11. Phase 2：C++ 设备模拟器起步
+
+Phase 2 开始进入 C++ 侧开发。当前目标不是立刻连接 Java 后端，而是先建立一个可编译、可测试、可运行的 C++ 工程骨架。
+
+当前 C++ 模块位于：
+
+```text
+native/
+```
+
+主要结构：
+
+```text
+native/
+  CMakeLists.txt
+  apps/device-simulator/
+  include/edgelab/
+  src/
+  tests/
+```
+
+目录含义：
+
+- `apps/device-simulator/`：放可执行程序入口。当前设备模拟器从这里启动。
+- `include/edgelab/`：放对外可见的头文件，类似 Java 中公共 API 或接口定义。
+- `src/`：放 C++ 实现文件。
+- `tests/`：放测试程序。
+
+#### CMake 的作用
+
+CMake 是 C++ 项目常用的构建配置工具。它本身不是编译器，而是根据 `CMakeLists.txt` 生成适合不同平台和工具链的构建文件。
+
+本项目使用 CMake 的原因：
+
+- Visual Studio 可以直接打开 CMake 项目。
+- 后续 WSL/Linux 也可以使用同一套 CMake 配置。
+- 避免把项目绑定到 Visual Studio 专有 `.sln` 工程。
+
+当前设置使用 C++17：
+
+```cmake
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+```
+
+含义：
+
+- `CMAKE_CXX_STANDARD 17`：要求使用 C++17。
+- `CMAKE_CXX_STANDARD_REQUIRED ON`：如果编译器不支持 C++17，就直接失败。
+- `CMAKE_CXX_EXTENSIONS OFF`：尽量使用标准 C++，不依赖某个编译器的私有扩展。
+
+#### Visual Studio 编码警告
+
+Visual Studio 曾出现 `C4819` 警告，意思是文件中包含当前代码页无法表示的字符。原因通常是源码中有中文注释，但文件或编译器没有按 UTF-8 处理。
+
+本项目在 CMake 中为 MSVC 增加：
+
+```cmake
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
+```
+
+含义：
+
+- `MSVC` 表示当前编译器是 Microsoft Visual C++。
+- `/utf-8` 告诉 MSVC 按 UTF-8 处理源码文件。
+
+如果仍然出现编码警告，可以在 Visual Studio 中对文件使用：
+
+```text
+File -> Save As -> Save with Encoding -> UTF-8
+```
+
+#### 第一个 C++ 数据结构：TelemetryReading
+
+当前用 `struct` 表示一条遥测读数。
+
+`struct` 可以先理解为 Java 中只有字段的 DTO。区别是 C++ 的 `struct` 成员默认是 `public`，适合表达简单数据对象。
+
+当前字段包括：
+
+- `device_id`：设备 ID。
+- `metric_code`：指标编码。
+- `value`：采集值。
+- `unit`：单位。
+- `collected_at`：采集时间。
+
+字段命名使用 `snake_case`，这是 C++ 中常见风格。Java 通常使用 `camelCase`，所以同一业务字段在 Java 和 C++ 中可能分别写成：
+
+```text
+Java: deviceId
+C++ : device_id
+JSON: deviceId
+```
+
+#### const 引用参数
+
+格式化函数使用：
+
+```cpp
+std::string format_as_json(const TelemetryReading& reading);
+```
+
+其中：
+
+- `std::string`：返回 C++ 标准库字符串。
+- `TelemetryReading`：参数类型。
+- `&`：引用传参，避免复制整个对象。
+- `const`：函数承诺不会修改传入对象。
+
+这是一种常见 C++ 企业代码习惯。只读取一个对象时，优先考虑 `const T&`，既表达意图，又避免不必要的拷贝。
+
+#### 第一个 C++ 测试
+
+当前测试程序是：
+
+```text
+telemetry_formatter_test
+```
+
+它不是 JUnit 或 GoogleTest，而是一个最小 C++ 可执行程序。测试通过时不输出内容，失败时打印 `Expected` 和 `Actual` 并返回非零退出码。
+
+CTest 根据退出码判断测试结果：
+
+- 返回 `0`：测试通过。
+- 返回非 `0`：测试失败。
+
+因此，`telemetry_formatter_test` 没有输出并不表示没运行；如果 CTest 显示 `100% tests passed`，就表示测试通过。
+
+#### 第一个设备模拟器输出
+
+当前 `device_simulator` 会创建一条固定遥测数据，然后调用 `format_as_json` 转成 JSON 并打印到控制台。
+
+这一步的业务意义是：
+
+1. C++ 侧已经能表达一条设备数据。
+2. C++ 侧已经能生成 Java 后端可理解的 JSON 结构。
+3. 后续只需要把“打印到控制台”替换为“发送 HTTP 请求”，就能完成第一次 Java + C++ 协作。
