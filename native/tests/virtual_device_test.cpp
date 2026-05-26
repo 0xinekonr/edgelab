@@ -30,13 +30,13 @@ namespace
 
 int main()
 {
-	edgelab::VirtualDevice device{ "pump-001" };
+	edgelab::VirtualDevice device{ "pump-001", 68.25 };
 
 	const edgelab::TelemetryReading reading = device.collect_temperature();
 
 	expect_equal(reading.device_id, "pump-001");
 	expect_equal(reading.metric_code, "temperature");
-	expect_equal(reading.value, 72.5);
+	expect_equal(reading.value, 68.25);
 	expect_equal(reading.unit, "celsius");
 	expect_equal(reading.collected_at, "2026-05-20T10:30:00Z");
 

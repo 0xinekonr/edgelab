@@ -6,10 +6,9 @@
 
 int main()
 {
-
     // VirtualDevice 表示一台虚拟工业设备。
     // 这里的 pump-001 可以理解为一台水泵的设备编号。
-    const edgelab::VirtualDevice device{ "pump-001" };
+    const edgelab::VirtualDevice device{ "pump-001", 72.5 };
 
     // 设备采集一次温度，返回一条 TelemetryReading。
     const edgelab::TelemetryReading reading = device.collect_temperature();

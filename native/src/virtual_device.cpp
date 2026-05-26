@@ -4,10 +4,12 @@
 
 namespace edgelab
 {
-    VirtualDevice::VirtualDevice(std::string device_id)
-        : device_id_(std::move(device_id))
+    VirtualDevice::VirtualDevice(std::string device_id, double temperature_value)
+        : device_id_(std::move(device_id)),
+          temperature_value_(temperature_value)
     {
-        // 成员初始化列表在构造对象时直接初始化 device_id_。
+        // 成员初始化列表会按照类中成员变量的声明顺序初始化。
+        // 因此建议初始化列表顺序与 virtual_device.h 中的成员声明顺序保持一致。
         // std::move 表示 device_id 这个参数后续不再使用，可以把字符串资源转移给成员变量。
     }
 
@@ -18,7 +20,7 @@ namespace edgelab
         return TelemetryReading{
             device_id_,
             "temperature",
-            72.5,
+            temperature_value_,
             "celsius",
             "2026-05-20T10:30:00Z"
         };
