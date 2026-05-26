@@ -12,6 +12,7 @@ endif()
 
 add_library(edgelab_core
     src/telemetry_formatter.cpp
+    src/virtual_device.cpp
 )
 
 target_include_directories(edgelab_core
@@ -42,4 +43,18 @@ target_link_libraries(telemetry_formatter_test
 add_test(
     NAME telemetry_formatter_test
     COMMAND telemetry_formatter_test
+)
+
+add_executable(virtual_device_test
+    tests/virtual_device_test.cpp
+)
+
+target_link_libraries(virtual_device_test
+    PRIVATE
+        edgelab_core
+)
+
+add_test(
+    NAME virtual_device_test
+    COMMAND virtual_device_test
 )
