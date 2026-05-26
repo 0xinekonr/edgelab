@@ -4,9 +4,10 @@
 
 namespace edgelab
 {
-    VirtualDevice::VirtualDevice(std::string device_id, double temperature_value)
+    VirtualDevice::VirtualDevice(std::string device_id, double temperature_value, std::string collected_at)
         : device_id_(std::move(device_id)),
-          temperature_value_(temperature_value)
+        temperature_value_(temperature_value),
+        collected_at_(std::move(collected_at))
     {
         // 成员初始化列表会按照类中成员变量的声明顺序初始化。
         // 因此建议初始化列表顺序与 virtual_device.h 中的成员声明顺序保持一致。
@@ -22,7 +23,7 @@ namespace edgelab
             "temperature",
             temperature_value_,
             "celsius",
-            "2026-05-20T10:30:00Z"
+            collected_at_
         };
     }
 
