@@ -2,11 +2,9 @@
 
 #include <sstream>
 
-namespace edgelab
-{
+namespace edgelab {
 
-std::string format_as_json(const TelemetryReading& reading)
-{
+std::string format_as_json(const TelemetryReading& reading) {
     // std::ostringstream 是“字符串输出流”，可以像写控制台输出一样拼接字符串。
     // 这里先手写 JSON，是为了学习 C++ 字符串拼接和流式输出。
     // 真实生产项目通常会使用成熟 JSON 库，后续再引入更合适。

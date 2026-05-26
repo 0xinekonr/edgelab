@@ -4,8 +4,7 @@
 
 #include <string>
 
-namespace edgelab
-{
+namespace edgelab {
 
 // 函数声明：告诉编译器“有一个名为 format_as_json 的函数”，具体实现放在 .cpp 文件中。
 //
@@ -21,4 +20,4 @@ namespace edgelab
 //   把 C++ 设备模拟器内部的遥测读数，转换成 Java 后端 /api/v1/telemetry 能接收的 JSON。
 std::string format_as_json(const TelemetryReading& reading);
 
-}
+} // namespace edgelab
