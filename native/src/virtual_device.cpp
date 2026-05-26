@@ -19,4 +19,8 @@ TelemetryReading VirtualDevice::collect_temperature() const {
                             collected_at_};
 }
 
+void VirtualDevice::apply_temperature_delta(double delta) {
+    temperature_value_ += delta;
+}
+
 } // namespace edgelab

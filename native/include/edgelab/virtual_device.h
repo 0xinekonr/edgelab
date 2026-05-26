@@ -14,7 +14,11 @@ public:
 
     // 业务含义：模拟设备采集一次温度。
     // const 放在成员函数后面，表示这个函数不会修改当前设备对象的内部状态。
-    TelemetryReading collect_temperature() const;
+    [[nodiscard]] TelemetryReading collect_temperature() const;
+
+    // 修改设备内部温度，用于模拟环境温度变化。
+    // 和 collect_temperature() 不同，这个函数明确会改变对象状态。
+    void apply_temperature_delta(double delta);
 
 private:
     // C++ 常见命名习惯：私有成员变量使用尾随下划线。
