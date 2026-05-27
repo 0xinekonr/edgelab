@@ -350,3 +350,10 @@ CTest 根据退出码判断测试结果：
 1. C++ 侧已经能表达一条设备数据。
 2. C++ 侧已经能生成 Java 后端可理解的 JSON 结构。
 3. 后续只需要把“打印到控制台”替换为“发送 HTTP 请求”，就能完成第一次 Java + C++ 协作。
+
+### 12. C++ 自由函数与匿名命名空间
+
+在 `device_simulator` 中，输出一条温度遥测数据的逻辑被提取为文件内辅助函数：
+
+```cpp
+void print_temperature_reading(const edgelab::VirtualDevice& device)
