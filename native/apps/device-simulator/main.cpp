@@ -3,23 +3,23 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 int main() {
-    // VirtualDevice 表示一台虚拟工业设备。
-    // 这里的 pump-001 可以理解为一台水泵的设备编号。
-    const edgelab::VirtualDevice device{"pump-001", 72.5, "2026-05-20T10:30:00Z"};
+    // 这里不能使用 const，因为后面要调用 apply_temperature_delta 修改设备温度状态。
+    edgelab::VirtualDevice device{"pump-001", 72.5, "2026-05-20T10:30:00Z"};
 
-    // 设备采集一次温度，返回一条 TelemetryReading。
-    const edgelab::TelemetryReading reading = device.collect_temperature();
+    // std::vector 是 C++ 标准库动态数组，类似 Java 中常用的 ArrayList。
+    // 这里保存每次采集之后要应用的温度变化量。
+    const std::vector<double> temperature_deltas{0.3, -0.1};
 
-    // 把内部 C++ 数据结构转换成 Java 后端 API 能理解的 JSON。
-    // format_as_json 接收 const TelemetryReading&
-    // 这表示函数只读取 reading，不复制对象，也不会修改对象。
-    const std::string payload = edgelab::format_as_json(reading);
+    std::cout << edgelab::format_as_json(device.collect_temperature()) << '\n';
 
-    // std::cout 是标准输出，类似 Java 的 System.out。
-    // '\n' 表示换行。这里优先用 '\n'，而不是 std::endl，因为 std::endl 还会强制刷新缓冲区。
-    std::cout << payload << '\n';
+    for (double delta : temperature_deltas) {
+        device.apply_temperature_delta(delta);
+
+        std::cout << edgelab::format_as_json(device.collect_temperature()) << '\n';
+    }
 
     return 0;
 }
