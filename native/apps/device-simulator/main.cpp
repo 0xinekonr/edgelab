@@ -1,9 +1,9 @@
 #include <edgelab/telemetry_formatter.h>
+#include <edgelab/temperature_profile.h>
 #include <edgelab/virtual_device.h>
 
 #include <iostream>
 #include <string>
-#include <vector>
 
 namespace {
 
@@ -23,14 +23,14 @@ int main() {
     // 这里不能使用 const，因为后面要调用 apply_temperature_delta 修改设备温度状态。
     edgelab::VirtualDevice device{"pump-001", 72.5, "2026-05-20T10:30:00Z"};
 
-    // std::vector 是 C++ 标准库动态数组，类似 Java 中常用的 ArrayList。
-    // 这里保存每次采集之后要应用的温度变化量。
-    const std::vector<double> temperature_deltas{0.3, -0.1};
+    // TemperatureProfile 负责按预设序列产生温度变化量。
+    // 这样 VirtualDevice 不需要关心变化策略，只负责维护设备状态。
+    edgelab::TemperatureProfile temperature_profile{{0.3, -0.1}};
 
     print_temperature_reading(device);
 
-    for (double delta : temperature_deltas) {
-        device.apply_temperature_delta(delta);
+    for (int i = 0; i < 2; ++i) {
+        device.apply_temperature_delta(temperature_profile.next_delta());
         print_temperature_reading(device);
     }
 

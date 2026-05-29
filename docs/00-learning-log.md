@@ -356,4 +356,15 @@ CTest 根据退出码判断测试结果：
 在 `device_simulator` 中，输出一条温度遥测数据的逻辑被提取为文件内辅助函数：
 
 ```cpp
-void print_temperature_reading(const edgelab::VirtualDevice& device)
+void print_temperature_reading(const edgelab::VirtualDevice& device
+```
+
+### 13. TemperatureProfile 与确定性模拟
+
+`TemperatureProfile` 用来产生温度变化量，例如 `0.3`、`-0.1`。它把“温度如何变化”的策略从 `VirtualDevice` 中拆出来，使 `VirtualDevice` 只负责保存设备状态和采集数据。
+
+当前使用确定性序列，而不是随机数：
+
+```cpp
+edgelab::TemperatureProfile temperature_profile{{0.3, -0.1}};
+```
