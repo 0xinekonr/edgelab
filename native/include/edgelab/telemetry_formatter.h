@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EDGELAB_TELEMETRY_FORMATTER_H
+#define EDGELAB_TELEMETRY_FORMATTER_H
 
 #include <edgelab/telemetry_reading.h>
 
@@ -21,3 +22,5 @@ namespace edgelab {
 std::string format_as_json(const TelemetryReading& reading);
 
 } // namespace edgelab
+
+#endif // EDGELAB_TELEMETRY_FORMATTER_H

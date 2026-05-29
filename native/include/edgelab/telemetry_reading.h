@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EDGELAB_TELEMETRY_READING_H
+#define EDGELAB_TELEMETRY_READING_H
 
 #include <string>
 
@@ -25,3 +26,5 @@ struct TelemetryReading {
 };
 
 } // namespace edgelab
+
+#endif // EDGELAB_TELEMETRY_READING_H

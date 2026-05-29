@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EDGELAB_TEMPERATURE_PROFILE_H
+#define EDGELAB_TEMPERATURE_PROFILE_H
 
 #include <cstddef>
 #include <vector>
@@ -22,3 +23,5 @@ private:
 };
 
 } // namespace edgelab
+
+#endif // EDGELAB_TEMPERATURE_PROFILE_H

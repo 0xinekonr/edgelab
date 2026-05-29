@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EDGELAB_VIRTUAL_DEVICE_H
+#define EDGELAB_VIRTUAL_DEVICE_H
 
 #include <edgelab/telemetry_reading.h>
 
@@ -35,3 +36,5 @@ private:
 };
 
 } // namespace edgelab
+
+#endif // EDGELAB_VIRTUAL_DEVICE_H
