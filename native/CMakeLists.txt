@@ -14,6 +14,7 @@ add_library(edgelab_core
     src/telemetry_formatter.cpp
     src/virtual_device.cpp
     src/temperature_profile.cpp
+    src/random_temperature_profile.cpp
 )
 
 target_include_directories(edgelab_core
@@ -72,4 +73,18 @@ target_link_libraries(temperature_profile_test
 add_test(
     NAME temperature_profile_test
     COMMAND temperature_profile_test
+)
+
+add_executable(random_temperature_profile_test
+    tests/random_temperature_profile_test.cpp
+)
+
+target_link_libraries(random_temperature_profile_test
+    PRIVATE
+        edgelab_core
+)
+
+add_test(
+    NAME random_temperature_profile_test
+    COMMAND random_temperature_profile_test
 )

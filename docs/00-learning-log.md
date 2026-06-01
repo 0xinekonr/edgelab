@@ -351,20 +351,108 @@ CTest 根据退出码判断测试结果：
 2. C++ 侧已经能生成 Java 后端可理解的 JSON 结构。
 3. 后续只需要把“打印到控制台”替换为“发送 HTTP 请求”，就能完成第一次 Java + C++ 协作。
 
-### 12. C++ 自由函数与匿名命名空间
+### 12. C++ 设备状态与温度变化策略
 
-在 `device_simulator` 中，输出一条温度遥测数据的逻辑被提取为文件内辅助函数：
+`VirtualDevice` 表示一台虚拟工业设备，负责保存设备状态，例如设备 ID、当前温度和采集时间。
 
-```cpp
-void print_temperature_reading(const edgelab::VirtualDevice& device
-```
-
-### 13. TemperatureProfile 与确定性模拟
-
-`TemperatureProfile` 用来产生温度变化量，例如 `0.3`、`-0.1`。它把“温度如何变化”的策略从 `VirtualDevice` 中拆出来，使 `VirtualDevice` 只负责保存设备状态和采集数据。
-
-当前使用确定性序列，而不是随机数：
+当前设计将“读取状态”和“修改状态”分开：
 
 ```cpp
-edgelab::TemperatureProfile temperature_profile{{0.3, -0.1}};
+[[nodiscard]] TelemetryReading collect_temperature() const;
+void apply_temperature_delta(double delta);
 ```
+
+`collect_temperature()` 是 `const` 成员函数，只读取设备状态并生成遥测数据，不修改设备对象。
+
+`apply_temperature_delta()` 明确表示它会修改设备内部温度。这样可以避免“读取数据的方法偷偷改变对象状态”，让代码语义更清楚。
+
+`[[nodiscard]]` 是 C++17 属性，用于提示调用方不要忽略函数返回值。对 `collect_temperature()` 来说，返回的 `TelemetryReading` 就是函数的主要结果，因此标记 `[[nodiscard]]` 是合理的。
+
+### 13. C++ 自由函数与匿名命名空间
+
+`device_simulator` 中的辅助输出函数不是 `VirtualDevice` 的成员函数：
+
+```cpp
+void print_temperature_reading(const edgelab::VirtualDevice& device)
+```
+
+原因是“输出到控制台”不是设备本身的核心职责。设备负责维护状态和生成遥测数据，控制台输出属于当前可执行程序的展示逻辑。
+
+这个辅助函数被放在匿名命名空间中：
+
+```cpp
+namespace {
+void print_temperature_reading(const edgelab::VirtualDevice& device) {
+    ...
+}
+}
+```
+
+匿名命名空间让函数只在当前 `.cpp` 文件内部可见，适合放文件内辅助函数。这样可以避免把只服务于当前可执行程序的小函数暴露到整个项目中。
+
+参数使用：
+
+```cpp
+const edgelab::VirtualDevice& device
+```
+
+含义：
+
+- `&`：引用传参，避免复制对象。
+- `const`：函数承诺不会修改设备。
+- 这要求 `collect_temperature()` 是 `const` 成员函数。
+
+### 14. TemperatureProfile 与确定性模拟
+
+`TemperatureProfile` 用于产生确定性的温度变化序列，例如：
+
+```cpp
+edgelab::TemperatureProfile profile{{0.3, -0.1}};
+```
+
+连续调用 `next_delta()` 会得到：
+
+```text
+0.3 -> -0.1 -> 0.3 -> -0.1
+```
+
+确定性 profile 适合测试，因为结果稳定、可重复。
+
+`next_delta()` 不是 `const` 成员函数，因为它每次调用都会推进内部下标。这个副作用符合函数语义：获取“下一个”变化量时，profile 的内部位置会前进。
+
+`std::size_t` 常用于表示容器大小和下标。它是无符号整数类型，和 `std::vector::size()` 的返回类型匹配。
+
+`throw std::invalid_argument` 表示调用方传入了非法参数。这里用于阻止空的温度变化序列，因为没有任何 delta 的 profile 无法工作。
+
+### 15. RandomTemperatureProfile 与随机模拟
+
+`RandomTemperatureProfile` 用于产生随机温度变化量，更接近真实模拟场景。
+
+它内部使用两个 C++ 标准库组件：
+
+```cpp
+std::mt19937 engine_;
+std::uniform_real_distribution<double> distribution_;
+```
+
+`std::mt19937` 是随机数引擎，可以理解为产生随机序列的机器。
+
+`std::uniform_real_distribution<double>` 是分布器，用来把随机引擎产生的值映射到指定范围内，例如 `-0.5` 到 `0.5`。
+
+C++ 随机数通常拆成两层：
+
+```text
+engine：负责产生随机序列
+distribution：负责控制随机值的范围和分布
+```
+
+构造函数中的 `seed` 是随机种子。相同种子会产生相同随机序列，这对本地调试和测试很有价值。
+
+`RandomTemperatureProfile` 的测试没有断言具体随机值，而是断言生成值落在范围内。这是为了避免不同标准库实现细节带来的不稳定。
+
+当前设计保持职责分离：
+
+- `VirtualDevice`：维护设备状态，生成遥测读数。
+- `TemperatureProfile`：产生可预测的温度变化，适合测试。
+- `RandomTemperatureProfile`：产生随机温度变化，适合真实模拟。
+- `device_simulator`：负责把设备和 profile 编排起来，输出模拟数据。

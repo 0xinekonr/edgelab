@@ -1,5 +1,5 @@
 #include <edgelab/telemetry_formatter.h>
-#include <edgelab/temperature_profile.h>
+#include <edgelab/random_temperature_profile.h>
 #include <edgelab/virtual_device.h>
 
 #include <iostream>
@@ -23,13 +23,13 @@ int main() {
     // 这里不能使用 const，因为后面要调用 apply_temperature_delta 修改设备温度状态。
     edgelab::VirtualDevice device{"pump-001", 72.5, "2026-05-20T10:30:00Z"};
 
-    // TemperatureProfile 负责按预设序列产生温度变化量。
+    // RandomTemperatureProfile 负责按预设序列产生温度变化量。
     // 这样 VirtualDevice 不需要关心变化策略，只负责维护设备状态。
-    edgelab::TemperatureProfile temperature_profile{{0.3, -0.1}};
+    edgelab::RandomTemperatureProfile temperature_profile{-0.5, 0.5, 42};
 
     print_temperature_reading(device);
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 5; ++i) {
         device.apply_temperature_delta(temperature_profile.next_delta());
         print_temperature_reading(device);
     }
