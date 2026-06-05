@@ -26,9 +26,19 @@ add_executable(device_simulator
     apps/device-simulator/main.cpp
 )
 
+add_library(device_simulator_support
+        apps/device-simulator/simulation_config.cpp
+)
+
+target_include_directories(device_simulator_support
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/apps/device-simulator
+)
+
 target_link_libraries(device_simulator
     PRIVATE
         edgelab_core
+        device_simulator_support
 )
 
 enable_testing()
@@ -87,4 +97,18 @@ target_link_libraries(random_temperature_profile_test
 add_test(
     NAME random_temperature_profile_test
     COMMAND random_temperature_profile_test
+)
+
+add_executable(simulation_config_test
+    tests/simulation_config_test.cpp
+)
+
+target_link_libraries(simulation_config_test
+     PRIVATE
+        device_simulator_support
+)
+
+add_test(
+        NAME simulation_config_test
+        COMMAND simulation_config_test
 )
