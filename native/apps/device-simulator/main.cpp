@@ -1,13 +1,13 @@
+#include <command_line_parser.h>
 #include <simulation_config.h>
-
-#include <edgelab/telemetry_formatter.h>
 #include <edgelab/random_temperature_profile.h>
+#include <edgelab/telemetry_formatter.h>
 #include <edgelab/virtual_device.h>
 
 #include <cstddef>
+#include <cstdlib>
+#include <exception>
 #include <iostream>
-#include <string>
-
 
 namespace {
 
@@ -21,32 +21,41 @@ void print_temperature_reading(const edgelab::VirtualDevice& device) {
 
 } // namespace
 
-int main() {
-    const edgelab::simulator::SimulationConfig config =
-        edgelab::simulator::default_simulation_config();
+int main(int argc, char* argv[]) {
+    try {
+        const edgelab::simulator::CommandLineParseResult parse_result =
+            edgelab::simulator::parse_command_line(argc, argv);
 
-    edgelab::simulator::validate_config(config);
+        if (parse_result.help_requested) {
+            std::cout << edgelab::simulator::usage_text();
+            return EXIT_SUCCESS;
+        }
 
-    edgelab::VirtualDevice device{
-        config.device_id,
-        config.initial_temperature,
-        config.collected_at
-    };
+        const edgelab::simulator::SimulationConfig& config = parse_result.config;
 
-    // RandomTemperatureProfile 负责产生随机温度变化量。
-    // 这样 VirtualDevice 不需要关心变化策略，只负责维护设备状态。
-    edgelab::RandomTemperatureProfile temperature_profile{
-        config.min_temperature_delta,
-        config.max_temperature_delta,
-        config.random_seed
-    };
+        edgelab::VirtualDevice device{
+            config.device_id,
+            config.initial_temperature,
+            config.collected_at
+        };
 
-    print_temperature_reading(device);
+        edgelab::RandomTemperatureProfile temperature_profile{
+            config.min_temperature_delta,
+            config.max_temperature_delta,
+            config.random_seed
+        };
 
-    for (std::size_t i = 0; i < config.additional_reading_count; ++i) {
-        device.apply_temperature_delta(temperature_profile.next_delta());
         print_temperature_reading(device);
-    }
 
-    return 0;
+        for (std::size_t i = 0; i < config.additional_reading_count; ++i) {
+            device.apply_temperature_delta(temperature_profile.next_delta());
+            print_temperature_reading(device);
+        }
+
+        return EXIT_SUCCESS;
+    } catch (const std::exception& e) {
+        std::cerr << "device_simulator: " << e.what() << "\n\n";
+        std::cerr << edgelab::simulator::usage_text();
+        return EXIT_FAILURE;
+    }
 }

@@ -27,11 +27,12 @@ add_executable(device_simulator
 )
 
 add_library(device_simulator_support
-        apps/device-simulator/simulation_config.cpp
+    apps/device-simulator/simulation_config.cpp
+    apps/device-simulator/command_line_parser.cpp
 )
 
 target_include_directories(device_simulator_support
-        PUBLIC
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/apps/device-simulator
 )
 
@@ -104,11 +105,25 @@ add_executable(simulation_config_test
 )
 
 target_link_libraries(simulation_config_test
-     PRIVATE
+    PRIVATE
         device_simulator_support
 )
 
 add_test(
-        NAME simulation_config_test
-        COMMAND simulation_config_test
+    NAME simulation_config_test
+    COMMAND simulation_config_test
+)
+
+add_executable(command_line_parser_test
+    tests/command_line_parser_test.cpp
+)
+
+target_link_libraries(command_line_parser_test
+    PRIVATE
+        device_simulator_support
+)
+
+add_test(
+    NAME command_line_parser_test
+    COMMAND command_line_parser_test
 )

@@ -28,4 +28,4 @@ void validate_config(const SimulationConfig& config);
 
 } // namespace edgelab::simulator
 
-#endif //EDGELAB_DEVICE_SIMULATOR_SIMULATION_CONFIG_H
+#endif // EDGELAB_DEVICE_SIMULATOR_SIMULATION_CONFIG_H
