@@ -1,15 +1,15 @@
-# 当前计划：设备模拟器命令行参数解析
+# 当前计划：C++ 模拟器上报 Java 后端
 
-最后更新：2026-06-08
+最后更新：2026-06-16
 
 ## 目标
 
-把 `device_simulator` 从固定默认参数的模拟器，升级为可以通过命令行配置的工具。
+让 `device_simulator` 把生成的 telemetry JSON 上报到 Spring Boot 后端的 `POST /api/v1/telemetry` 接口，形成第一条 Java / C++ 协同链路。
 
-目标命令示例：
+目标运行方式示例：
 
 ```powershell
-.\device_simulator.exe --device-id pump-002 --readings 10 --seed 7 --initial-temperature 68.5 --min-delta -0.2 --max-delta 0.8
+.\device_simulator.exe --device-id pump-002 --readings 3 --seed 7 --server-url http://localhost:8080/api/v1/telemetry
 ```
 
 ## 本功能块的协作方式
@@ -22,122 +22,70 @@
 - 若未来确实需要 Codex 直接改源码，必须由用户明确说出“本次允许 Codex 修改源码”。
 - 继续保持旧线程的教学节奏：一次推进一个完整功能包，包含设计、核心代码、轻量测试、验证和学习点；讲解节奏放慢，但编码任务粒度放大。
 
-## 预期文件
+## 前置状态
 
-新增源码文件：
-
-```text
-native/apps/device-simulator/command_line_parser.h
-native/apps/device-simulator/command_line_parser.cpp
-native/tests/command_line_parser_test.cpp
-```
-
-更新已有文件：
+已完成：
 
 ```text
-native/CMakeLists.txt
-native/apps/device-simulator/main.cpp
-docs/00-learning-log.md
-docs/PROJECT_STATE.md
-docs/HANDOFF.md
+feat(native): add simulator command line parsing
+docs: add long-term project continuity notes
 ```
+
+模拟器当前已经可以：
+
+- 生成 telemetry JSON。
+- 通过命令行参数控制设备 ID、读数数量、随机种子、初始温度和温度波动范围。
+- 对非法命令行参数打印错误和 usage。
 
 ## 功能需求
 
-支持参数：
+新增能力：
 
-- `--device-id <id>`
-- `--readings <count>`
-- `--seed <number>`
-- `--initial-temperature <number>`
-- `--min-delta <number>`
-- `--max-delta <number>`
-- `--collected-at <timestamp>`
-- `-h`, `--help`
+- 为模拟器增加后端上报地址配置，例如 `--server-url <url>`。
+- 支持“只打印到控制台”和“打印并上报”两种模式。
+- C++ 侧发送 HTTP POST，请求体为当前已有 JSON。
+- 后端继续复用现有 `/api/v1/telemetry`。
+- 上报失败时给出清晰错误信息，不做复杂重试。
 
 行为要求：
 
-- 从 `default_simulation_config()` 开始构造默认配置。
-- 只覆盖用户显式传入的配置项。
-- 除非请求 help，否则解析完成后调用 `validate_config()`。
-- 拒绝未知参数。
-- 拒绝缺失参数值。
-- 拒绝非法数字。
-- 拒绝 `std::size_t` 和 `unsigned int` 的整数溢出。
-- help 和错误场景都能打印统一 usage。
+- 默认仍可本地打印，避免必须启动后端才能演示模拟器。
+- 指定 server URL 后，对每条 telemetry 执行一次 POST。
+- 上报逻辑和设备状态逻辑分离，不能塞进 `VirtualDevice`。
+- 先实现最小可理解版本，再考虑抽象 HTTP client。
 
-## 建议 API
+## 学习重点
 
-命名空间：
-
-```cpp
-namespace edgelab::simulator
-```
-
-结果对象：
-
-```cpp
-struct CommandLineParseResult {
-    SimulationConfig config;
-    bool help_requested;
-};
-```
-
-函数：
-
-```cpp
-[[nodiscard]] CommandLineParseResult parse_command_line(int argc, char* argv[]);
-[[nodiscard]] std::string usage_text();
-```
+- C++ 和 Java 通过进程 / HTTP 协同，而不是一开始就 JNI。
+- 为什么 HTTP 是跨语言协作中最常见、最稳妥的第一步。
+- C++ 网络编程的选择：标准库缺口、OS API、第三方库。
+- 请求失败、超时、状态码和异常边界。
+- 如何让模拟器保持可测试、可替换、不过度耦合。
 
 ## 实现检查清单
 
-1. `进行中` 用户手写 `command_line_parser.h` 的 API 声明。
-2. `进行中` 用户手写 `command_line_parser.cpp`。
-3. `进行中` 从 `argc` / `argv` 解析常用参数。
-4. `进行中` 增加读取必填参数值的辅助函数。
-5. `进行中` 增加数字解析，并验证整个字符串都被消费。
-6. `进行中` 为 count 和 seed 增加溢出检查。
-7. `进行中` 非 help 场景调用 `validate_config()`。
-8. `进行中` 增加 `usage_text()`。
-9. `进行中` 更新 `main.cpp`，入口改成 `int argc, char* argv[]`。
-10. `进行中` 更新 `main.cpp`，处理 help 和异常。
-11. `进行中` 更新 `native/CMakeLists.txt`，加入 parser 源文件和测试 target。
-12. `进行中` 增加 `command_line_parser_test.cpp`。
-13. `待开始` 运行聚焦验证。
-14. `待开始` 更新学习笔记和进度文档。
+1. `待开始` 确认 C++ HTTP 实现路线。
+2. `待开始` 为 `SimulationConfig` 增加可选 server URL 或上报开关。
+3. `待开始` 扩展命令行参数，例如 `--server-url`。
+4. `待开始` 新增上报函数或小型 client，接收 JSON 字符串并发送 POST。
+5. `待开始` 在 `main.cpp` 中编排：生成 telemetry、打印、按配置上报。
+6. `待开始` 启动 Java 后端，用模拟器发送 1 到 3 条数据。
+7. `待开始` 更新学习笔记和项目状态。
 
-## 聚焦测试用例
+## 轻量验证
 
-parser 最小测试：
-
-- 能解析 `--device-id`、`--readings`、`--seed`。
-- `--help` 可以不触发配置校验。
-- 未知参数会失败。
-- 缺失参数值会失败。
-- 非法整数会失败。
-- 非法浮点数会失败。
-
-模拟器最小手动检查：
+本功能块不做大量测试，优先手动验证端到端链路：
 
 ```powershell
-.\device_simulator.exe --help
-.\device_simulator.exe --device-id pump-002 --readings 3 --seed 7
+# backend 侧确认服务启动
+curl http://localhost:8080/actuator/health
+
+# native 侧运行模拟器
+.\device_simulator.exe --device-id pump-002 --readings 1 --server-url http://localhost:8080/api/v1/telemetry
 ```
 
-预期：
+验收标准：
 
-- help 打印 usage 并正常退出。
-- 示例运行打印初始读数 + 3 条额外读数。
-
-## 需要写入学习笔记的 C++ 点
-
-- `argc` / `argv` 和 Java `String[] args` 的对比。
-- `char* argv[]` 与 C 风格字符串边界。
-- 引用参数 `int& index`。
-- `std::stod`、`std::stoull`、`std::stoul`。
-- 通过 parsed character count 验证完整字符串解析。
-- `std::numeric_limits`。
-- `static_cast`。
-- 程序启动阶段的异常处理。
-- 为什么命令行解析属于 `apps/device-simulator`，不属于 `edgelab_core`。
+- 后端返回 `202 Accepted`。
+- C++ 侧能展示发送失败时的错误。
+- 不因为后端未启动而崩溃到无解释状态。

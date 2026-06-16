@@ -1,113 +1,84 @@
 # 交接文档
 
-最后更新：2026-06-08
+最后更新：2026-06-16
 
 ## 最新摘要
 
-已阅读上一条 Codex 线程，并将关键上下文整理为仓库内长期项目记忆。
-
 EdgeLab 当前处于 Phase 2：C++ 设备模拟器。
 
-上一线程最新编码目标是：
+最近完成：
 
-```text
-为 device_simulator 增加命令行参数解析。
-```
+- `device_simulator` 命令行参数解析。
+- 长期项目连续性文档。
+- 学习笔记补充命令行解析、`argc/argv`、`std::stod/stoul/stoull`、`numeric_limits`、`static_cast`、include what you use。
 
-本轮请求完成了长期项目说明文档和进度跟踪结构初始化，并将说明文档统一改为中文。
+用户明确希望后续：
 
-2026-06-08 当前线程再次确认协作边界：
-
-- 核心代码和构建文件由用户手动编写。
-- Codex 在用户每次完成后进行静态检查。
-- Codex 保持旧线程教学节奏：一次给完整功能包，讲解关键 C++ / Java 差异，用户完成后再做一次静态检查。
+- 加快功能推进节奏。
+- 测试轻量化。
+- 从 Java 开发者视角点明 C++ 独特知识点，不讲太多通用语法。
+- C++ 核心代码继续由用户手写，Codex 做方案、检查和文档维护。
 
 ## 本轮涉及文件
 
-创建或更新：
+最近提交：
 
-- `AGENTS.md`
+```text
+333f923 docs: add long-term project continuity notes
+04c2597 feat(native): add simulator command line parsing
+de20b4a feat(native): add simulator runtime configuration
+```
+
+本次文档更新涉及：
+
+- `docs/00-learning-log.md`
 - `docs/PROJECT_STATE.md`
 - `docs/CURRENT_PLAN.md`
 - `docs/PROGRESS_TRACKING.md`
-- `docs/ROADMAP.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DECISIONS.md`
 - `docs/HANDOFF.md`
-- `.codex/config.toml`
-
-删除：
-
-- `AGENT.md`
-
-删除原因：
-
-- `AGENTS.md` 是更常见的仓库级 agent 指南文件名。
-- `AGENT.md` 只是上轮为了兼容用户原话中的单数写法而创建。
-- 同时存在两个入口会造成歧义，所以现在只保留 `AGENTS.md`。
-
-读取过：
-
-- `README.md`
-- `docs/00-learning-log.md`
-- `docs/01-domain-overview.md`
-- `docs/superpowers/plans/2026-05-20-edgelab-learning-development-plan.md`
-- native CMake、模拟器、配置和测试文件
-- backend Maven 配置和部分后端文件
 
 ## 执行过的命令
 
 ```powershell
 git status --short
-git branch --show-current
-git diff -- native\apps\device-simulator\simulation_config.h
-Get-ChildItem -Force
-rg --files
-rg --files docs .codex AGENT.md AGENTS.md
-python C:\Users\axin\.codex\skills\long-project-continuity\scripts\init_project_continuity.py --root D:\playground\edgelab
-py C:\Users\axin\.codex\skills\long-project-continuity\scripts\init_project_continuity.py --root D:\playground\edgelab
+git log --oneline -3
+Get-Content docs\00-learning-log.md
+Get-Content docs\PROJECT_STATE.md
+Get-Content docs\HANDOFF.md
+ctest -R command_line_parser_test --output-on-failure
+.\device_simulator.exe --readings -1
 ```
 
-脚本说明：
+说明：
 
-- `python` 命令失败且无输出。
-- `py` 命令未被系统识别。
-- 因此连续性文件是手动初始化的。
+- `ctest` 在当前 PowerShell 环境中不在 PATH 中。
+- `device_simulator.exe --readings -1` 成功打印非负整数错误和 usage。
 
 ## 验证状态
 
-本轮主要是文档整理，没有运行 C++ / Java 构建测试。
+当前功能块已由用户完成并提交。
 
-已做的文档检查：
+已确认：
 
-- 读取并检查 `docs/CURRENT_PLAN.md`。
-- 读取并检查 `docs/PROGRESS_TRACKING.md`。
-- 通过 `git status --short` 查看当前工作区状态。
-
-当前已知工作区中仍有一个既有源码修改：
-
-```text
-M native/apps/device-simulator/simulation_config.h
-```
-
-这个修改只是 include guard 注释空格修正，不要回退。
+- `git status --short` 为空。
+- 最近提交包含 native CLI parser 和长期文档。
+- 负数 `--readings -1` 场景输出符合预期。
 
 ## 剩余工作
 
-立即继续的功能块：
+下一功能块：
 
-1. 用户一次完成命令行参数解析功能包：`command_line_parser.h`、`command_line_parser.cpp`、`command_line_parser_test.cpp`、`CMakeLists.txt`、`main.cpp`。
-2. Codex 读取 diff 和相关文件，做一次静态检查。
-3. 静态检查重点：参数缺失、未知参数、数字解析、整数溢出、help 跳过校验、异常边界、CMake target 和 include 路径。
-4. 检查通过后再运行聚焦验证，并更新学习笔记。
+让 C++ 模拟器向 Java 后端 `POST /api/v1/telemetry` 上报 telemetry JSON。
 
-历史协作边界：
+建议策略：
 
-- 除非当前线程明确授权 Codex 直接改源码，否则不要修改核心代码。
-- 文档可以由 Codex 直接维护。
+1. 先讲清 C++ 网络实现路线选择。
+2. 为用户提供一版小而清晰的手写实现方案。
+3. 不引入大量测试，优先端到端手动验证。
+4. 验证后再考虑是否引入成熟 HTTP 库或抽象接口。
 
 ## 建议恢复提示
 
 ```text
-继续 EdgeLab Phase 2。先阅读 AGENTS.md 和 docs/HANDOFF.md，按 docs/CURRENT_PLAN.md 推进 device_simulator 命令行参数解析；完成后更新项目状态和交接文档。
+继续 EdgeLab Phase 2。命令行参数解析已提交。请按 docs/CURRENT_PLAN.md 进入 C++ device_simulator 向 Java 后端 POST telemetry 的功能块，保持测试轻量化，并从 Java 开发者视角讲解 C++ 网络、错误处理和工程边界。
 ```

@@ -456,3 +456,120 @@ distribution：负责控制随机值的范围和分布
 - `TemperatureProfile`：产生可预测的温度变化，适合测试。
 - `RandomTemperatureProfile`：产生随机温度变化，适合真实模拟。
 - `device_simulator`：负责把设备和 profile 编排起来，输出模拟数据。
+
+### 16. device_simulator 命令行参数解析
+
+`device_simulator` 现在支持通过命令行参数覆盖默认配置，例如：
+
+```powershell
+.\device_simulator.exe --device-id pump-002 --readings 3 --seed 7
+```
+
+这一步让模拟器从“写死配置的 demo”变成“可以被脚本、IDE、CI 或后续 Java 进程启动的工具”。真实生产里的边缘程序通常也会从启动参数、配置文件、环境变量或远程配置中心读取运行参数。
+
+#### argc / argv 与 Java args
+
+C++ 程序入口可以写成：
+
+```cpp
+int main(int argc, char* argv[])
+```
+
+它和 Java 的：
+
+```java
+public static void main(String[] args)
+```
+
+很像，但更底层：
+
+- `argc`：参数数量。
+- `argv`：参数数组。
+- `argv[0]`：通常是程序自身路径或名称。
+- `argv[1]` 开始才是用户传入的参数。
+
+`char* argv[]` 表示“C 风格字符串数组”。在函数参数位置，它和 `char** argv` 在类型机制上基本等价，但 `char* argv[]` 更能表达“这是一组命令行参数”。
+
+#### std::stod / std::stoul / std::stoull
+
+这些函数用于把字符串转换成数字：
+
+```cpp
+std::stod("12.5")   // string to double
+std::stoul("123")   // string to unsigned long
+std::stoull("123")  // string to unsigned long long
+```
+
+和 Java 的 `Double.parseDouble()`、`Integer.parseInt()` 相比，C++ 这里有一个容易忽略的点：这些函数可以告诉你“成功解析了多少个字符”。
+
+```cpp
+std::size_t parsed_char_count = 0;
+const double parsed_value = std::stod(value, &parsed_char_count);
+```
+
+如果输入是：
+
+```text
+12.5abc
+```
+
+`std::stod` 可能成功解析出 `12.5`，并把 `parsed_char_count` 设置为 `4`。如果不检查：
+
+```cpp
+parsed_char_count != value.size()
+```
+
+程序就会错误地接受 `12.5abc`。Java 的 `Double.parseDouble("12.5abc")` 通常会直接失败，所以这是 Java 开发者需要特别注意的 C++ 标准库行为。
+
+#### 无符号整数不是业务校验
+
+`std::stoul` 和 `std::stoull` 用于解析无符号整数，但这不等于它们会按业务语义拒绝所有负数字符串。为了确保 `--readings -1` 这种输入被拒绝，代码需要在转换前显式检查：
+
+```cpp
+if (!value.empty() && value.front() == '-') {
+    throw std::invalid_argument(option + " must be a non-negative integer");
+}
+```
+
+这是 C++ 里常见的工程思维：标准库提供基础能力，业务边界和错误语义仍然要自己明确表达。
+
+#### numeric_limits 与 static_cast
+
+命令行参数最终要落到具体字段类型里，例如：
+
+```cpp
+unsigned int random_seed;
+std::size_t additional_reading_count;
+```
+
+解析时先用更大的类型承接输入：
+
+```cpp
+const unsigned long long parsed_value = std::stoull(value, &parsed_char_count);
+```
+
+再判断是否超过目标类型范围：
+
+```cpp
+if (parsed_value > std::numeric_limits<unsigned int>::max()) {
+    throw std::invalid_argument(option + " is too large");
+}
+```
+
+最后用显式转换：
+
+```cpp
+return static_cast<unsigned int>(parsed_value);
+```
+
+Java 开发中较少直接面对这些整数宽度问题；C++ 里这种边界更常见，尤其在协议解析、二进制数据、跨平台代码和系统接口中。
+
+#### include what you use
+
+本功能中出现了一个典型 C++ 工程问题：编辑器可能提示 `<cstddef>` 没有被使用，因为其他头文件间接包含了它。但如果当前 `.cpp` 直接使用 `std::size_t`，仍然建议显式包含：
+
+```cpp
+#include <cstddef>
+```
+
+原因是 C++ 头文件之间的间接包含不应该成为当前文件的隐式依赖。一个文件自己用了什么类型，就应该自己包含对应头文件。这种习惯通常称为 include what you use。
