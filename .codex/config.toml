@@ -1,0 +1,14 @@
+[project]
+name = "EdgeLab"
+memory_initialized = true
+language = "zh-CN"
+
+[continuity]
+agent_guide = "AGENTS.md"
+project_state = "docs/PROJECT_STATE.md"
+current_plan = "docs/CURRENT_PLAN.md"
+progress_tracking = "docs/PROGRESS_TRACKING.md"
+roadmap = "docs/ROADMAP.md"
+architecture = "docs/ARCHITECTURE.md"
+decisions = "docs/DECISIONS.md"
+handoff = "docs/HANDOFF.md"
