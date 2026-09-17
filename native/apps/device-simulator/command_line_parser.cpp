@@ -96,6 +96,8 @@ CommandLineParseResult parse_command_line(int argc, char* argv[]) {
                 parse_double_value(option, require_value(argc, argv, i, option));
         } else if (option == "--collected-at") {
             config.collected_at = require_value(argc, argv, i, option);
+        } else if (option == "--server-url") {
+            config.server_url = require_value(argc, argv, i, option);
         } else {
             throw std::invalid_argument("Unknown option: " + option);
         }
@@ -119,6 +121,7 @@ std::string usage_text() {
         "  --min-delta <number>             Minimum random temperature delta\n"
         "  --max-delta <number>             Maximum random temperature delta\n"
         "  --collected-at <timestamp>       Timestamp used in generated telemetry\n"
+        "  --server-url <url>               HTTP endpoint used to post generated telemetry\n"
         "  -h, --help                       Show this help message\n";
 }
 

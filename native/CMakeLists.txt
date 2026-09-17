@@ -29,7 +29,15 @@ add_executable(device_simulator
 add_library(device_simulator_support
     apps/device-simulator/simulation_config.cpp
     apps/device-simulator/command_line_parser.cpp
+    apps/device-simulator/http_client.cpp
 )
+
+if(WIN32)
+    target_link_libraries(device_simulator_support
+        PUBLIC
+            ws2_32
+    )
+endif()
 
 target_include_directories(device_simulator_support
     PUBLIC

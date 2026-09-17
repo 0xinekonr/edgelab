@@ -13,6 +13,7 @@ struct SimulationConfig {
     std::string device_id;
     double initial_temperature;
     std::string collected_at;
+    std::string server_url;
     double min_temperature_delta;
     double max_temperature_delta;
     unsigned int random_seed;

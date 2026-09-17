@@ -9,6 +9,7 @@ SimulationConfig default_simulation_config() {
         "pump-001",
         72.5,
         "2026-05-20T10:30:00Z",
+        "",
         -0.5,
         0.5,
         42,

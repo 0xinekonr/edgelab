@@ -1,6 +1,8 @@
 # 当前计划：C++ 模拟器上报 Java 后端
 
-最后更新：2026-06-16
+最后更新：2026-09-15
+
+教学归属：M01 收尾；完成验收后进入独立 M02 会话。总安排见 `TEACHING_MODULES.md`。
 
 ## 目标
 
@@ -64,13 +66,15 @@ docs: add long-term project continuity notes
 
 ## 实现检查清单
 
-1. `待开始` 确认 C++ HTTP 实现路线。
-2. `待开始` 为 `SimulationConfig` 增加可选 server URL 或上报开关。
-3. `待开始` 扩展命令行参数，例如 `--server-url`。
-4. `待开始` 新增上报函数或小型 client，接收 JSON 字符串并发送 POST。
-5. `待开始` 在 `main.cpp` 中编排：生成 telemetry、打印、按配置上报。
-6. `待开始` 启动 Java 后端，用模拟器发送 1 到 3 条数据。
-7. `待开始` 更新学习笔记和项目状态。
+1. `已完成` 确认采用 Windows Winsock 最小 HTTP 教学实现。
+2. `已完成` `SimulationConfig` 增加 server URL。
+3. `已完成` CLI 支持 `--server-url`。
+4. `已完成` 最小 Winsock HTTP client；完整超时和响应解码仍为明确限制。
+5. `已完成` main 编排：生成 telemetry、打印、按配置上报；成功区间 [200, 300)。
+6. `已完成` 用户于 2026-09-15 报告离线、202、404、连接失败符合预期；Codex 未重复执行。
+7. `已完成` 更新教学笔记和项目状态，后续教学直接在对话中提供。
+8. `待验证` 用户运行现有 native/backend 提交前回归。
+9. `待开始` commit、push、PR 收尾及 M02 独立会话交接。
 
 ## 轻量验证
 
