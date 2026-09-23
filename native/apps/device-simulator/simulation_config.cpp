@@ -1,6 +1,7 @@
 #include "simulation_config.h"
 
 #include <stdexcept>
+#include <cmath>
 
 namespace edgelab::simulator {
 
@@ -18,6 +19,13 @@ SimulationConfig default_simulation_config() {
 }
 
 void validate_config(const SimulationConfig& config) {
+    // stod 接受 nan/inf，但遥测温度与随机区间必须是有限数。
+    // NaN 的大小比较通常返回 false，单靠 min > max 无法发现它。
+    if (!std::isfinite(config.initial_temperature) ||
+        !std::isfinite(config.min_temperature_delta) ||
+        !std::isfinite(config.max_temperature_delta)) {
+        throw std::invalid_argument("Temperature values must be finite");
+    }
     if (config.device_id.empty()) {
         throw std::invalid_argument("device_id must not be empty");
     }

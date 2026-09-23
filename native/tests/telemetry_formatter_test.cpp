@@ -26,4 +26,9 @@ int main() {
         R"({"deviceId":"pump-001","metricCode":"temperature","value":72.5,"unit":"celsius","collectedAt":"2026-05-20T10:30:00Z"})";
 
     expect_equal(actual, expected);
+
+    auto escaped = reading; // auto 推导类型；这里复制结构体，不是 Java 引用赋值。
+    escaped.device_id = "pump\"\\\n";
+    expect_equal(edgelab::format_as_json(escaped),
+        R"({"deviceId":"pump\"\\\u000a","metricCode":"temperature","value":72.5,"unit":"celsius","collectedAt":"2026-05-20T10:30:00Z"})");
 }

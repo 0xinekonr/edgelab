@@ -1,9 +1,15 @@
 # 项目状态
 
-最后更新：2026-09-15
+最后更新：2026-09-23
 
 ## 最新状态校准
 
+- 2026-09-23：用户报告新增转义/反向区间测试、NaN/Infinity/非法区间参数验证及正常 HTTP 上报均通过。Codex 静态检查确认三个修复主体及两项新增用例符合指导，未重跑测试。
+- 提交前剩余小修：telemetry_formatter.cpp 的 isfinite 改为 std::isfinite，直接包含 <stdexcept>；格式化并补文件末尾换行后聚焦构建运行 telemetry_formatter_test。随后提交这批 native 修复与状态文档并 push 更新 PR #3。其他用户改动保留。
+- PR #3 审查：GitHub API 确认 open、未合并，base=main，head=58196af；用户已确认 native/backend 回归全部通过。链接：https://github.com/0xinekonr/edgelab/pull/3。
+- 合并前待修：formatter 字符串未做 JSON 转义；配置允许 NaN/Infinity；RandomTemperatureProfile 在构造 distribution 后才验证区间。现有正常路径测试不覆盖这些边界。源码仍由用户手写修正，M02 暂未开始。
+- 2026-09-20：用户报告 push 完成。最新提交 `58196af feat(native): post simulator telemetry to backend`；本地 Git 显示与 origin 跟踪引用一致，未执行 fetch 验证远程最新状态。
+- 当前仅有 TelemetryController.java 末尾新增空行的用户修改，已保留。PR 状态待确认（本机 gh 不可用）；提交前 native/backend 回归仍需用户确认。现存 Maven 报告显示 3 项测试无失败，但未将旧报告作为本次提交的新验证证据。
 - 2026-09-15：用户已接通 main，并报告离线打印、HTTP 202、错误路径 404、关闭后端连接失败四个场景均符合预期。
 - Codex 静态检查确认 optional 端点、两个上报调用点和异常退出路径已接通；成功区间已修正为 [200, 300)。本轮未代替用户运行构建或联调。
 - 教学模块：M01，基础工程与首次跨语言闭环，覆盖 Phase 0–3，功能闭环已验证，待提交前回归与 Git 收尾。

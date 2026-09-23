@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 
 namespace {
 
@@ -20,6 +21,17 @@ int main() {
 
     for (int i = 0; i < 10; ++i) {
         expect_between(profile.next_delta(), -0.5, 0.5);
+    }
+
+    bool rejected = false;
+    try {
+        edgelab::RandomTemperatureProfile invalid{1.0, -1.0, 42};
+    } catch (const std::invalid_argument&) {
+        rejected = true;
+    }
+    if (!rejected) {
+        std::cerr << "Expected invalid range to be rejected\n";
+        return EXIT_FAILURE;
     }
 
     return 0;
